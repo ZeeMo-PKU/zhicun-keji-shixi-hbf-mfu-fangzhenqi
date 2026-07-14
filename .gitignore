@@ -1,0 +1,14 @@
+# Python
+__pycache__/
+*.py[cod]
+
+# Office temporary lock files
+~$*
+
+# Local temporary files
+*.tmp
+*.bak
+*.log
+
+# Optional local simulation output directory
+05_仿真结果/

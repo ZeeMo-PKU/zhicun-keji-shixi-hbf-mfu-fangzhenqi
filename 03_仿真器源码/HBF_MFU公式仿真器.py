@@ -546,11 +546,15 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     )
     parser.add_argument("--csv", type=Path, required=True, help="汇总结果CSV")
     parser.add_argument("--detail-csv", type=Path, help="可选的48层逐步时间CSV")
+    parser.add_argument(
+        "--visual-dir", type=Path, help="可选的HTML与SVG可视化输出目录"
+    )
     return parser.parse_args(argv)
 
 
 def main(argv: list[str] | None = None) -> int:
     args = parse_args(argv)
+    visual_outputs: list[Path] = []
     try:
         tail_kv_tokens = args.tail_kv_tokens
         if tail_kv_tokens is None:
@@ -573,6 +577,12 @@ def main(argv: list[str] | None = None) -> int:
         write_summary_csv(args.csv, summary)
         if args.detail_csv:
             write_detail_csv(args.detail_csv, traces)
+        if args.visual_dir:
+            from 生成仿真可视化 import generate_report
+
+            visual_outputs = generate_report(
+                args.csv, args.detail_csv, args.visual_dir
+            )
     except InputError as exc:
         print(f"输入错误：{exc}", file=sys.stderr)
         return 2
@@ -586,6 +596,8 @@ def main(argv: list[str] | None = None) -> int:
     print(f"汇总结果：{args.csv}")
     if args.detail_csv:
         print(f"逐层明细：{args.detail_csv}")
+    for path in visual_outputs:
+        print(f"可视化：{path}")
     print("AFD指标未输出：任务书仍缺少AF分离时序公式。")
     return 0
 

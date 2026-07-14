@@ -14,7 +14,18 @@
 ├─ 01_任务书/       原始任务书
 ├─ 02_输入模板/     用户填写的硬件指标Excel模板
 ├─ 03_仿真器源码/   仿真器与公式测试
-└─ 04_汇报材料/     PPT、讲稿和截图素材
+├─ 04_汇报材料/     PPT、讲稿和截图素材
+└─ 05_仿真结果/     本地生成的CSV、HTML和SVG（不提交Git）
+```
+
+```mermaid
+flowchart LR
+    A[硬件指标Excel] --> B[场景参数]
+    B --> C[P(.)传输量与C(.)计算量]
+    C --> D[单层流水时序]
+    D --> E[48层串联]
+    E --> F[汇总与逐层CSV]
+    F --> G[HTML报告与SVG图表]
 ```
 
 ## 输入
@@ -47,7 +58,8 @@ python .\03_仿真器源码\HBF_MFU公式仿真器.py `
   --input-seqlen 1024 `
   --history-seqlen 0 `
   --csv .\仿真汇总.csv `
-  --detail-csv .\逐层时序.csv
+  --detail-csv .\逐层时序.csv `
+  --visual-dir .\05_仿真结果
 ```
 
 Decode示例：
@@ -61,7 +73,8 @@ python .\03_仿真器源码\HBF_MFU公式仿真器.py `
   --history-seqlen 1024 `
   --tail-kv-tokens 16 `
   --csv .\仿真汇总.csv `
-  --detail-csv .\逐层时序.csv
+  --detail-csv .\逐层时序.csv `
+  --visual-dir .\05_仿真结果
 ```
 
 ## 输出
@@ -72,11 +85,31 @@ python .\03_仿真器源码\HBF_MFU公式仿真器.py `
 - `E2E latency(ms)`
 - 可选的48层逐层时序明细
 
+## 可视化
+
+传入 `--visual-dir` 后会同时生成：
+
+- `仿真结果总览.html`：适合浏览和汇报展示的完整页面
+- `场景指标对比.svg`：MFU、HBF读写利用率和E2E延迟
+- `首层流水时序.svg`：HBF、DDR、NPU矩阵和PCIe任务时间轴
+- `48层累计延迟.svg`：逐层结束时刻与累计延迟
+
+也可以对已有CSV单独生成可视化：
+
+```powershell
+python .\03_仿真器源码\生成仿真可视化.py `
+  --summary-csv .\仿真汇总.csv `
+  --detail-csv .\逐层时序.csv `
+  --output-dir .\05_仿真结果
+```
+
 ## 测试
 
 ```powershell
 cd .\03_仿真器源码
-python -m unittest -v .\测试_HBF_MFU公式仿真器.py
+python -m unittest -v `
+  .\测试_HBF_MFU公式仿真器.py `
+  .\测试_生成仿真可视化.py
 ```
 
 ## 当前边界

@@ -8,7 +8,7 @@ import unittest
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
-from 生成仿真可视化 import (
+from src.generate_visualizations import (
     DETAIL_FIELDS,
     SUMMARY_FIELDS,
     VisualizationInputError,

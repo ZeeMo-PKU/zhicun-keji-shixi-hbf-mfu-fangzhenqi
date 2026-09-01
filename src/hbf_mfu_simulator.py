@@ -578,7 +578,7 @@ def main(argv: list[str] | None = None) -> int:
         if args.detail_csv:
             write_detail_csv(args.detail_csv, traces)
         if args.visual_dir:
-            from 生成仿真可视化 import generate_report
+            from src.generate_visualizations import generate_report
 
             visual_outputs = generate_report(
                 args.csv, args.detail_csv, args.visual_dir

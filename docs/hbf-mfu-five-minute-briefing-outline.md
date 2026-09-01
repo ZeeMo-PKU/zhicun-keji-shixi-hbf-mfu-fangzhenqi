@@ -67,7 +67,7 @@
 
 ### 图示
 
-![任务书计算流图](素材/计算流图素材.png)
+![任务书计算流图](../assets/presentation/computation-flow.png)
 
 使用时只保留计算流图主体，突出NPU、DDR、HBF三条路径。不要把原截图下方的大段文字一起放到PPT中。
 
@@ -97,7 +97,7 @@
 
 ### 图示
 
-![任务书原始公式](素材/原始公式素材.png)
+![任务书原始公式](../assets/presentation/source-formulas.png)
 
 建议在PPT中对截图添加四个标注：
 
@@ -193,7 +193,7 @@ A：目标是先建立物理含义和公式一致的仿真器。拟合会掩盖�
 
 ## 对照文件
 
-- [原始任务书](../01_任务书/端侧HBF云端应用MFU计算任务书.docx)
-- [硬件指标填写模板](../02_输入模板/硬件指标填写模板.xlsx)
-- [当前公式仿真器](../03_仿真器源码/HBF_MFU公式仿真器.py)
-- [公式测试](../03_仿真器源码/测试_HBF_MFU公式仿真器.py)
+- [原始任务书](specification/hbf-cloud-application-mfu-task.docx)
+- [硬件指标填写模板](../config/hardware-metrics-template.xlsx)
+- [当前公式仿真器](../src/hbf_mfu_simulator.py)
+- [公式测试](../tests/test_hbf_mfu_simulator.py)

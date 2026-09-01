@@ -1,121 +1,112 @@
-# HBF MFU公式仿真器
+# Zhicun Technology Internship Project: HBF MFU Formula Simulator
 
-本项目依据《端侧HBF云端应用MFU计算任务书》中的计算流与公式，构建M12-24B模型的基础端到端公式仿真器。
+This private repository contains an internship project completed for Zhicun Technology. It implements a formula-driven simulator for estimating Model FLOPs Utilization (MFU), HBF traffic and utilization, and end-to-end latency for the M12-24B model described in the project specification.
 
-当前版本坚持两个原则：
+The implementation follows two principles:
 
-- 只实现任务书能够明确展开的部分。
-- 对量纲错误和数据依赖错误做最小修正，不使用结果拟合或隐藏假设。
+- Model only the computation and data movement that can be derived explicitly from the source specification.
+- Apply minimal corrections to dimensional or dependency inconsistencies without fitting outputs or introducing hidden assumptions.
 
-## 项目结构
+## Project Scope
+
+The simulator accepts hardware parameters and workload settings, expands the workload into transfer and compute quantities, constructs a single-layer pipeline schedule, and propagates it across 48 layers. It can export summary metrics, layer-level timing data, an HTML report, and SVG visualizations.
+
+The current version supports baseline non-AFD prefill and decode scenarios. It is an analytical formula model, not a hardware-calibrated performance model.
+
+## Repository Structure
 
 ```text
-知存项目/
-├─ 01_任务书/       原始任务书
-├─ 02_输入模板/     用户填写的硬件指标Excel模板
-├─ 03_仿真器源码/   仿真器与公式测试
-├─ 04_汇报材料/     PPT、讲稿和截图素材
-└─ 05_仿真结果/     本地生成的CSV、HTML和SVG（不提交Git）
+assets/presentation/       Figures used by technical presentations
+config/                    Hardware input workbook
+docs/internship/           Internship learning notes
+docs/specification/        Original project specification
+presentations/             Briefing decks and speaker scripts
+src/                       Simulator and visualization source code
+tests/                     Formula and report-generation tests
 ```
+
+## Data Flow
 
 ```mermaid
 flowchart LR
-    A[硬件指标Excel] --> B[场景参数]
-    B --> C[P(.)传输量与C(.)计算量]
-    C --> D[单层流水时序]
-    D --> E[48层串联]
-    E --> F[汇总与逐层CSV]
-    F --> G[HTML报告与SVG图表]
+    A[Hardware workbook] --> B[Workload parameters]
+    B --> C[Transfer and compute quantities]
+    C --> D[Single-layer pipeline]
+    D --> E[48-layer schedule]
+    E --> F[Summary and layer-level CSV files]
+    F --> G[HTML report and SVG charts]
 ```
 
-## 输入
+## Inputs
 
-硬件指标从 `02_输入模板/硬件指标填写模板.xlsx` 读取，包括：
+Hardware metrics are read from `config/hardware-metrics-template.xlsx`, including chip count, matrix throughput and utilization, HBF bandwidth and latency, DDR bandwidth, and PCIe bandwidth and latency.
 
-- 芯片数量
-- 单芯片Matrix算力与有效利用率
-- HBF读写带宽及访问延迟
-- DDR带宽
-- PCIe有效带宽及固定延迟
+Each simulation also requires `mode`, `batch-size`, `input-seqlen`, and `history-seqlen`. `tail-kv-tokens` is required when the history length is greater than zero.
 
-单次仿真还需提供：
+## Running the Simulator
 
-- `mode`：`prefill` 或 `decode`
-- `batch-size`
-- `input-seqlen`
-- `history-seqlen`
-- `tail-kv-tokens`：历史长度大于0时必填
-
-## 运行
-
-Prefill示例：
+Prefill example:
 
 ```powershell
-python .\03_仿真器源码\HBF_MFU公式仿真器.py `
-  --hardware-file .\02_输入模板\硬件指标填写模板.xlsx `
+python -m src.hbf_mfu_simulator `
+  --hardware-file .\config\hardware-metrics-template.xlsx `
   --mode prefill `
   --batch-size 1 `
   --input-seqlen 1024 `
   --history-seqlen 0 `
-  --csv .\仿真汇总.csv `
-  --detail-csv .\逐层时序.csv `
-  --visual-dir .\05_仿真结果
+  --csv .\simulation-summary.csv `
+  --detail-csv .\layer-timing.csv `
+  --visual-dir .\simulation-results
 ```
 
-Decode示例：
+Decode example:
 
 ```powershell
-python .\03_仿真器源码\HBF_MFU公式仿真器.py `
-  --hardware-file .\02_输入模板\硬件指标填写模板.xlsx `
+python -m src.hbf_mfu_simulator `
+  --hardware-file .\config\hardware-metrics-template.xlsx `
   --mode decode `
   --batch-size 1 `
   --input-seqlen 1 `
   --history-seqlen 1024 `
   --tail-kv-tokens 16 `
-  --csv .\仿真汇总.csv `
-  --detail-csv .\逐层时序.csv `
-  --visual-dir .\05_仿真结果
+  --csv .\simulation-summary.csv `
+  --detail-csv .\layer-timing.csv `
+  --visual-dir .\simulation-results
 ```
 
-## 输出
+## Outputs
 
-- `MFU (%)`
-- `HBF read util (%)`
-- `HBF write util (%)`
-- `E2E latency(ms)`
-- 可选的48层逐层时序明细
+- MFU (%)
+- HBF read utilization (%)
+- HBF write utilization (%)
+- End-to-end latency (ms)
+- Optional timing details for all 48 layers
 
-## 可视化
+When `--visual-dir` is provided, the simulator also generates an HTML overview and SVG charts for scenario comparison, first-layer pipeline timing, and cumulative 48-layer latency.
 
-传入 `--visual-dir` 后会同时生成：
-
-- `仿真结果总览.html`：适合浏览和汇报展示的完整页面
-- `场景指标对比.svg`：MFU、HBF读写利用率和E2E延迟
-- `首层流水时序.svg`：HBF、DDR、NPU矩阵和PCIe任务时间轴
-- `48层累计延迟.svg`：逐层结束时刻与累计延迟
-
-也可以对已有CSV单独生成可视化：
+Existing CSV files can be visualized independently:
 
 ```powershell
-python .\03_仿真器源码\生成仿真可视化.py `
-  --summary-csv .\仿真汇总.csv `
-  --detail-csv .\逐层时序.csv `
-  --output-dir .\05_仿真结果
+python -m src.generate_visualizations `
+  --summary-csv .\simulation-summary.csv `
+  --detail-csv .\layer-timing.csv `
+  --output-dir .\simulation-results
 ```
 
-## 测试
+## Tests
 
 ```powershell
-cd .\03_仿真器源码
-python -m unittest -v `
-  .\测试_HBF_MFU公式仿真器.py `
-  .\测试_生成仿真可视化.py
+python -m unittest discover -s tests -v
 ```
 
-## 当前边界
+## Current Limitations
 
-- 已支持单场景、非AFD的prefill/decode基础计算链路。
-- AFD缺少完整时序公式，当前不输出AFD指标。
-- `tail_kv_tokens`在任务书中没有定义，独立decode场景需要用户明确填写。
-- top-k延迟、vector/softmax、SRAM tiling以及通信计算重叠尚未详细建模。
-- 当前结果代表公式模型输出，不代表已经完成真实硬件校准。
+- Only single-scenario, non-AFD prefill and decode flows are supported.
+- AFD metrics are not produced because the source specification does not provide a complete timing model.
+- `tail_kv_tokens` must be supplied explicitly for standalone decode scenarios.
+- Top-k latency, vector and softmax operations, SRAM tiling, and communication-computation overlap are not yet modeled in detail.
+- Results are analytical formula outputs and have not been calibrated against production hardware.
+
+## Confidentiality
+
+This is a private internship repository. Project specifications, hardware parameters, presentation materials, and derived results should not be redistributed without authorization.

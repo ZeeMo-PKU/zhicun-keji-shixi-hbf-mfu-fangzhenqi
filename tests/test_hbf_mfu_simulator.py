@@ -1,6 +1,6 @@
 import unittest
 
-from HBF_MFU公式仿真器 import (
+from src.hbf_mfu_simulator import (
     Hardware,
     InputError,
     KV_WRITE_MIN_SECONDS,
